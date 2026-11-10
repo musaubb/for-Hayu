@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>For Haya ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#f6d8a8; --blush:#ffb8c9;
+    --glass:rgba(255,255,255,.06); --line:rgba(255,255,255,.14); --text:#efe9ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  button,.env,.pol{touch-action:manipulation}
+  body{
+    font-family:'Poppins',sans-serif;font-weight:300;color:var(--text);
+    background:#07061a;min-height:100vh;overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  canvas#sky{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+  main{position:relative;z-index:2}
+  section{max-width:560px;margin:0 auto;padding:90px 22px;text-align:center}
+  .serif{font-family:'Cormorant Garamond',serif}
+  .kicker{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--gold);opacity:.85;margin-bottom:12px}
+  h2{font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:38px;margin-bottom:30px}
+  .glow{text-shadow:0 0 18px rgba(255,184,201,.55)}
+
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity 1.1s cubic-bezier(.2,.7,.2,1),transform 1.1s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ============ SCENERY (skyline, sun, mountains) ============ */
+  #scene{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;--dawn:0;--sun:0}
+  #skyline{position:absolute;left:0;bottom:0;width:100%;height:24vh;will-change:transform}
+  #skyline rect{fill:#0a0920}
+  #skyline rect.win{fill:#ffd98a;opacity:.75}
+  #sun{position:absolute;left:50%;bottom:14vh;width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle,#fffaf0 0%,#ffe3b0 45%,#ffbf8a 70%,rgba(255,180,130,0) 72%);
+    box-shadow:0 0 60px 30px rgba(255,200,150,.45),0 0 160px 90px rgba(255,170,140,.25);
+    transform:translate(-50%,calc((14vh + 190px) * (1 - var(--sun))));opacity:calc(.25 + var(--sun) * .75)}
+  #mountains{position:absolute;left:0;bottom:0;width:100%;height:30vh;transform:translateY(105%);will-change:transform}
+  #mountains .glowlayer{opacity:var(--dawn)}
+  #mountains .snow{fill:rgba(255,255,255,.78)}
+
+  /* ============ FLIGHT PROGRESS BAR ============ */
+  #flightbar{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:10px;
+    padding:calc(12px + env(safe-area-inset-top)) 16px 20px;font-size:10px;letter-spacing:3px;color:var(--gold);
+    background:linear-gradient(rgba(7,6,26,.85),rgba(7,6,26,0));opacity:0;transition:opacity .8s;pointer-events:none}
+  #flightbar.on{opacity:1}
+  #flightbar .trk{flex:1;height:2px;position:relative;border-top:1px dashed rgba(255,255,255,.25)}
+  #flightbar .done{position:absolute;left:0;top:-1.5px;height:2px;width:0;
+    background:linear-gradient(90deg,var(--gold),var(--blush));box-shadow:0 0 8px var(--blush)}
+  #flightbar .pl{position:absolute;top:-12px;left:0;font-size:16px;transform:translateX(-50%)}
+
+  /* ============ INTRO ============ */
+  #intro{position:fixed;inset:0;background:#000;z-index:50;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:30px;text-align:center;transition:opacity 1.6s}
+  #intro.gone{opacity:0;pointer-events:none}
+  #typed{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:26px;line-height:1.6;min-height:130px}
+  #typed .cursor{display:inline-block;width:2px;height:24px;background:var(--gold);margin-left:3px;
+    vertical-align:middle;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:0}}
+  .btn{margin-top:34px;background:transparent;color:var(--gold);border:1px solid var(--gold);
+    padding:13px 34px;border-radius:999px;font-family:'Poppins';letter-spacing:2px;font-size:13px;
+    cursor:pointer;opacity:0;transition:all .8s}
+  .btn.show{opacity:1;animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{50%{box-shadow:0 0 26px rgba(246,216,168,.55)}}
+
+  /* ============ HERO ============ */
+  #hero{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding-bottom:26vh}
+  #nameSpot{height:clamp(150px,44vw,260px);width:100%;position:relative}
+  #nameSpot h1{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Great Vibes',cursive;font-weight:400;font-size:clamp(90px,26vw,150px);color:var(--blush);opacity:0}
+  #nameSpot.fallback h1{opacity:1}
+  .tagline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;margin-top:4px;opacity:.9}
+  .hint{font-size:11px;letter-spacing:2px;opacity:.45;margin-top:10px}
+  .route{margin:40px auto 0;width:100%;max-width:380px;display:flex;align-items:center;gap:10px;
+    font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+  .track{flex:1;position:relative;height:2px;border-top:2px dashed var(--line)}
+  .plane{position:absolute;top:-15px;font-size:20px;animation:fly 5s ease-in-out infinite}
+  @keyframes fly{0%{left:-5%;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:95%;opacity:0}}
+  .scroll-hint{margin-top:50px;font-size:12px;letter-spacing:3px;opacity:.5;animation:bob 2s infinite}
+  @keyframes bob{50%{transform:translateY(8px)}}
+
+  /* ============ POLAROIDS (they "develop") ============ */
+  .polaroids{display:flex;justify-content:center;flex-wrap:wrap;gap:18px}
+  .pol{background:#fdfbf7;padding:10px 10px 44px;width:43%;max-width:220px;border-radius:4px;
+    box-shadow:0 15px 35px rgba(0,0,0,.45);position:relative;transition:transform .4s}
+  .pol:nth-child(1){transform:rotate(-5deg)}
+  .pol:nth-child(2){transform:rotate(4deg)}
+  .pol:hover,.pol:active{transform:rotate(0) scale(1.06);z-index:2}
+  .pol .ph{aspect-ratio:4/5;background:linear-gradient(135deg,#f7d9e0,#e9dcff);position:relative;
+    overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:40px}
+  .pol img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    filter:brightness(2.4) blur(8px) sepia(1);opacity:.25;transition:filter 4s ease .6s,opacity 3s ease .6s}
+  .reveal.in .pol img{filter:none;opacity:1}
+  .pol .cap{position:absolute;bottom:8px;left:0;right:0;font-family:'Great Vibes';font-size:24px;color:#4a3b5c}
+  .tape{position:absolute;top:-10px;left:50%;transform:translateX(-50%) rotate(-3deg);width:70px;height:22px;
+    background:rgba(255,230,180,.7)}
+
+  /* ============ TIMELINE (line draws itself) ============ */
+  .tl{position:relative;text-align:left;padding-left:34px}
+  .tl-line{position:absolute;left:9px;top:6px;bottom:6px;width:2px;transform-origin:top;transform:scaleY(0);
+    background:linear-gradient(var(--gold),var(--blush));box-shadow:0 0 10px var(--blush)}
+  .item{position:relative;margin-bottom:26px;background:var(--glass);border:1px solid var(--line);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:16px;padding:16px 18px}
+  .item::before{content:'';position:absolute;left:-31px;top:20px;width:12px;height:12px;border-radius:50%;
+    background:var(--gold);box-shadow:0 0 14px var(--gold),0 0 30px var(--blush)}
+  .item .t{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold);margin-bottom:4px}
+  .item p{font-size:14px;line-height:1.65;opacity:.9}
+
+  /* ============ BOARDING PASS (3D tilt + stamp) ============ */
+  .passwrap{perspective:900px}
+  .pass{display:flex;background:linear-gradient(135deg,#fff7ef,#ffe9ef);color:#2b2140;border-radius:18px;
+    overflow:hidden;text-align:left;box-shadow:0 20px 50px rgba(0,0,0,.5);position:relative;
+    transition:transform .2s ease-out;transform-style:preserve-3d;--sx:50%;--sy:50%}
+  .pass::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;
+    background:radial-gradient(circle at var(--sx) var(--sy),rgba(255,255,255,.9),rgba(255,184,201,.35) 30%,transparent 60%)}
+  .pass .main{flex:1;padding:20px}
+  .pass .stub{width:32%;padding:20px 14px;border-left:2px dashed #d7b9c4;background:rgba(255,184,201,.25);
+    display:flex;flex-direction:column;justify-content:space-between}
+  .pass .airline{font-size:10px;letter-spacing:3px;color:#b0708a;margin-bottom:12px}
+  .pass .codes{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .pass .code{font-family:'Cormorant Garamond';font-size:40px;font-weight:600;line-height:1}
+  .pass .city{font-size:10px;letter-spacing:1px;opacity:.6}
+  .pass .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pass .lab{font-size:9px;letter-spacing:2px;opacity:.55;text-transform:uppercase}
+  .pass .val{font-size:13px;font-weight:500}
+  .barcode{height:44px;background:repeating-linear-gradient(90deg,#2b2140 0 2px,transparent 2px 4px,#2b2140 4px 5px,transparent 5px 8px)}
+  .stamp{position:absolute;right:6px;bottom:74px;border:2px solid #d0486c;color:#d0486c;border-radius:6px;
+    padding:3px 7px;font-size:9px;font-weight:500;letter-spacing:2px;transform:rotate(-12deg) scale(3);opacity:0}
+  .reveal.in .stamp{animation:stamp .5s cubic-bezier(.2,1.4,.4,1) 1.2s forwards}
+  @keyframes stamp{to{transform:rotate(-12deg) scale(1);opacity:.85}}
+
+  /* ============ ENVELOPES ============ */
+  .envs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .env{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:20px 14px;cursor:pointer;
+    min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    transition:all .5s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .env .seal{font-size:34px;transition:transform .5s}
+  .env .lbl{font-family:'Cormorant Garamond';font-style:italic;font-size:19px}
+  .env .msg{font-size:13px;line-height:1.6;max-height:0;overflow:hidden;opacity:0;transition:all .6s}
+  .env.open{background:rgba(255,184,201,.12);border-color:var(--blush);box-shadow:0 0 30px rgba(255,184,201,.2)}
+  .env.open .seal{transform:scale(.7) rotate(-15deg)}
+  .env.open .msg{max-height:220px;opacity:1}
+
+  /* ============ FINALE ============ */
+  #finale{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding-bottom:34vh}
+  .star{font-size:80px;cursor:pointer;filter:drop-shadow(0 0 20px #ffe9a8) drop-shadow(0 0 45px var(--blush));
+    animation:pulse 2.2s ease-in-out infinite;background:none;border:none;margin:20px 0}
+  @keyframes pulse{50%{transform:scale(1.15) rotate(10deg)}}
+  .star.hide{display:none}
+  .spark{position:fixed;pointer-events:none;font-size:16px;z-index:40;animation:burst 1.6s ease-out forwards}
+  @keyframes burst{to{transform:translate(var(--x),var(--y)) scale(.3);opacity:0}}
+  #letter{display:none;text-align:left;background:rgba(12,9,34,.42);border:1px solid var(--line);border-radius:20px;
+    padding:28px 24px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);max-width:480px;width:100%}
+  #letter p{font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1.55;margin-bottom:14px;min-height:1em}
+  #letter .sign{font-family:'Great Vibes';font-size:38px;color:var(--gold);text-align:right}
+
+  /* falling chinar leaves after sunrise */
+  .leaf{position:fixed;top:-40px;z-index:3;pointer-events:none;animation:leaf linear forwards}
+  @keyframes leaf{
+    0%{transform:translate(0,0) rotate(0)}
+    25%{transform:translate(30px,28vh) rotate(90deg)}
+    50%{transform:translate(-20px,56vh) rotate(200deg)}
+    75%{transform:translate(25px,84vh) rotate(290deg)}
+    100%{transform:translate(-10px,112vh) rotate(380deg)}
+  }
+
+  #music{position:fixed;bottom:18px;right:18px;z-index:30;width:46px;height:46px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--gold);font-size:18px;cursor:pointer;
+    backdrop-filter:blur(6px);display:none}
+  #music.on{animation:spin 4s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  footer{text-align:center;padding:40px;font-size:11px;letter-spacing:2px;opacity:.5;position:relative;z-index:2}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+
+<!-- skyline sinks as she "takes off", mountains rise as she "lands", the sun waits for the star -->
+<div id="scene">
+  <svg id="skyline" viewBox="0 0 800 200" preserveAspectRatio="none"></svg>
+  <div id="sun"></div>
+  <svg id="mountains" viewBox="0 0 800 260" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="alp" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffb199"/><stop offset=".6" stop-color="#b96a9a" stop-opacity=".5"/>
+        <stop offset="1" stop-color="#2d2462" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polygon fill="#2d2462" points="0,260 0,150 60,110 120,140 190,70 250,120 320,50 390,115 450,80 520,130 590,60 660,120 720,90 800,140 800,260"/>
+    <polygon class="glowlayer" fill="url(#alp)" points="0,260 0,150 60,110 120,140 190,70 250,120 320,50 390,115 450,80 520,130 590,60 660,120 720,90 800,140 800,260"/>
+    <polygon class="snow" points="190,70 172,88 182,86 189,95 197,86 205,93 212,88"/>
+    <polygon class="snow" points="320,50 300,70 310,68 318,78 326,68 334,76 341,70"/>
+    <polygon class="snow" points="590,60 572,78 581,76 589,86 597,77 604,84 611,78"/>
+    <polygon fill="#1b1545" points="0,260 0,190 80,150 150,185 240,135 330,180 420,140 500,185 600,145 690,190 800,150 800,260"/>
+    <polygon fill="#0d0b26" points="0,260 0,225 100,200 220,228 340,205 470,232 600,208 720,230 800,212 800,260"/>
+  </svg>
+</div>
+
+<div id="flightbar">
+  <span>BHX</span>
+  <div class="trk"><div class="done" id="fbDone"></div><span class="pl" id="fbPlane">✈️</span></div>
+  <span>SXR</span>
+</div>
+
+<!-- ============ INTRO ============ -->
+<div id="intro">
+  <div id="typed"></div>
+  <button class="btn" id="beginBtn" onclick="begin()">TAP TO BEGIN ✨</button>
+</div>
+
+<button id="music" onclick="toggleMusic()">♪</button>
+<audio id="bgm" src="music.mp3" loop></audio> <!-- optional: put a song named music.mp3 in the same folder -->
+
+<main>
+  <!-- ============ HERO: her name is written in stars ============ -->
+  <section id="hero">
+    <div class="kicker reveal">before you fly</div>
+    <div id="nameSpot"><h1>Haya</h1></div>
+    <div class="tagline reveal">a little something, from the heart</div>
+    <div class="hint reveal">( touch the stars )</div>
+    <div class="route reveal">
+      <span>Birmingham</span>
+      <div class="track"><span class="plane">✈️</span></div>
+      <span>Kashmir</span>
+    </div>
+    <div class="scroll-hint">SCROLL ↓</div>
+  </section>
+
+  <section>
+    <div class="kicker reveal">a little piece of home</div>
+    <h2 class="reveal glow">Far from home, but…</h2>
+    <p class="serif reveal" style="font-size:22px;line-height:1.6;font-style:italic;opacity:.92">
+      …in a city full of strangers,<br>I somehow found someone who feels familiar.<br><br>
+      Funny how that works. 🌙
+    </p>
+  </section>
+
+  <!-- ============ PHOTOS: save as photo1.jpg and photo2.jpg in this folder ============ -->
+  <section>
+    <div class="kicker reveal">caught on camera</div>
+    <h2 class="reveal">little moments</h2>
+    <div class="polaroids reveal">
+      <div class="pol"><div class="tape"></div><div class="ph">🌸<img src="photo1.jpg" alt="" onerror="this.remove()"></div><div class="cap">this smile ✨</div></div>
+      <div class="pol"><div class="tape"></div><div class="ph">🌙<img src="photo2.jpg" alt="" onerror="this.remove()"></div><div class="cap">pure happiness</div></div>
+    </div>
+  </section>
+
+  <!-- ============ TIMELINE ============ -->
+  <section>
+    <div class="kicker reveal">our story so far</div>
+    <h2 class="reveal">the highlights</h2>
+    <div class="tl" id="tl">
+      <div class="tl-line" id="tlLine"></div>
+      <div class="item reveal"><div class="t">☕ Chai at Food Studio</div>
+        <p>Hatim treated it like a board meeting. We treated it like a comedy show😭.</p></div>
+      <div class="item reveal"><div class="t">🎳 Bowling</div>
+        <p>I won game one. You won game two. Totally fairly. Obviously. 👀 then desserts, and I learned you can’t throw a punch 😭.</p></div>
+      <div class="item reveal"><div class="t">🌳 “I’m dressed as a tree”</div>
+        <p>Still the best disguise Lloyds Bank has ever seen 🤡.</p></div>
+      <div class="item reveal"><div class="t">🧣 Juices for Life</div>
+        <p>Shakes, silly games (you beating me at chidiya udd) and your music. I’ve never been that happy sitting outside a Greggs 🤭.</p></div>
+      <div class="item reveal"><div class="t">🍫 The churro incident</div>
+        <p>I said no. You didn’t care. Still finding Nutella in my beard 😭.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ BOARDING PASS ============ -->
+  <section>
+    <div class="kicker reveal">your ticket</div>
+    <h2 class="reveal">boarding pass</h2>
+    <div class="passwrap reveal">
+      <div class="pass" id="pass">
+        <div class="main">
+          <div class="airline">CHAI AIRWAYS ✦ FIRST CLASS</div>
+          <div class="codes">
+            <div><div class="code">BHX</div><div class="city">BIRMINGHAM</div></div>
+            <div style="font-size:22px">✈</div>
+            <div style="text-align:right"><div class="code">SXR</div><div class="city">SRINAGAR</div></div>
+          </div>
+          <div class="row">
+            <div><div class="lab">Passenger</div><div class="val">HAYA</div></div>
+            <div><div class="lab">Date</div><div class="val">12 NOV</div></div>
+            <div><div class="lab">Baggage</div><div class="val">1 famous suitcase</div></div>
+            <div><div class="lab">Plus</div><div class="val">1 dog teddy 🐶</div></div>
+            <div><div class="lab">Seat</div><div class="val">Window, obviously</div></div>
+            <div><div class="lab">Return</div><div class="val">Soon (please)</div></div>
+          </div>
+        </div>
+        <div class="stub">
+          <div><div class="lab">Gate</div><div class="val">Chai ☕</div></div>
+          <div><div class="lab">Status</div><div class="val">Stress-free</div></div>
+          <div class="barcode"></div>
+        </div>
+        <div class="stamp">APPROVED ✓</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OPEN WHEN ============ -->
+  <section>
+    <div class="kicker reveal">tap to open</div>
+    <h2 class="reveal">open when…</h2>
+    <div class="envs reveal">
+      <div class="env" onclick="this.classList.toggle('open')"><div class="seal">💌</div><div class="lbl">you’re stressed</div>
+        <div class="msg">Chill. Breathe. Whatever’s going on is temporary. You’ve handled harder things, and you’ll handle this too.</div></div>
+      <div class="env" onclick="this.classList.toggle('open')"><div class="seal">🌳</div><div class="lbl">you need a smile</div>
+        <div class="msg">Just remember the girl who was “dressed as a tree” outside Lloyds. You’re welcome 😄</div></div>
+      <div class="env" onclick="this.classList.toggle('open')"><div class="seal">🦋</div><div class="lbl">someone decides for you</div>
+        <div class="msg">You’re smart, strong (KUCH ZYADA HE) and stubborn in the best way. Say what you feel calmly. Only you get to write your story.</div></div>
+      <div class="env" onclick="this.classList.toggle('open')"><div class="seal">🌧️</div><div class="lbl">you miss Birmingham</div>
+        <div class="msg">Birmingham feels a little quieter without you. Come back soon ☕</div></div>
+    </div>
+  </section>
+
+  <!-- ============ FINALE: touching the star makes the sun rise over Kashmir ============ -->
+  <section id="finale">
+    <div class="kicker reveal">one last thing</div>
+    <h2 class="reveal glow">touch the star</h2>
+    <button class="star reveal" id="star" onclick="touchStar()">⭐</button>
+    <div id="letter">
+      <p data-t="Haya,"></p>
+      <p data-t="These last few days have honestly been my favourite days in Birmingham."></p>
+      <p data-t="Chai, bowling, Nutella in my beard… and you, laughing at all my bad jokes."></p>
+      <p data-t="Whatever is waiting for you at home, remember, it’s your life, and only you get to choose how it goes."></p>
+      <p data-t="So don’t stress too much. Fly safe, breathe, be brave."></p>
+      <p data-t="And come back soon, okay? Because I’m really, really glad you turned around. 🌙"></p>
+      <p class="sign" data-t="— Musaub"></p>
+    </div>
+  </section>
+
+  <footer>MADE WITH TOO MUCH CHAI ☕</footer>
+</main>
+
+<script>
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const smooth = (a,b,v) => { const t = clamp((v-a)/(b-a),0,1); return t*t*(3-2*t); };
+const lerp3 = (a,b,t) => `rgb(${a.map((v,i) => Math.round(v+(b[i]-v)*t)).join(',')})`;
+function rng(seed){ return () => { seed = (seed*1664525 + 1013904223) % 4294967296; return seed/4294967296; }; }
+
+/* ================= build the Birmingham skyline ================= */
+(function(){
+  const r = rng(11); let x = 0, s = '';
+  while(x < 800){
+    let w = 26 + r()*38, h = 45 + r()*95, rx = 0;
+    if(x > 330 && x < 370){ w = 46; h = 150; rx = 6; }          // the Rotunda
+    if(x > 560 && x < 600){ w = 12; h = 188; }                   // BT Tower
+    s += `<rect x="${x.toFixed(1)}" y="${(200-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${rx}"/>`;
+    for(let wy = 200-h+8; wy < 192; wy += 12)
+      for(let wx = x+5; wx < x+w-6; wx += 10)
+        if(r() < .32) s += `<rect class="win" x="${wx.toFixed(1)}" y="${wy.toFixed(1)}" width="4" height="5"/>`;
+    x += w + 2;
+  }
+  $('skyline').innerHTML = s;
+})();
+
+/* ================= the sky ================= */
+const cv = $('sky'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1, stars = [], shooters = [], trail = [], rings = [];
+let nameP = [], forming = false, lastCy = null;
+let px = -999, py = -999;                 // pointer
+let sunrise = 0, sunriseStart = 0, starTouched = false, begun = false;
+
+function sizeCanvas(){
+  const newW = innerWidth, widthChanged = newW !== W;
+  W = newW; H = innerHeight; DPR = Math.min(devicePixelRatio || 1, 2);
+  cv.width = W*DPR; cv.height = H*DPR;
+  if(widthChanged){
+    const r = rng(5);
+    stars = Array.from({length: Math.floor(clamp(W*H/4200, 120, 420))}, () => ({
+      x: r(), y: r(), z: .2 + r()*.8, r: r()*1.3 + .25, sp: .0006 + r()*.0022, ph: r()*6.28
+    }));
+    buildName();
+  }
+}
+addEventListener('resize', sizeCanvas);
+
+/* her name, sampled from the font into ~1800 stars */
+function buildName(){
+  const spot = $('nameSpot'), rect = spot.getBoundingClientRect();
+  const w = Math.floor(Math.min(W*.94, 660)), h = Math.floor(rect.height);
+  if(w < 50 || h < 50) return;
+  const oc = document.createElement('canvas'); oc.width = w; oc.height = h;
+  const o = oc.getContext('2d');
+  let fs = h*.74; o.font = `${fs}px "Great Vibes", cursive`;
+  const mw = o.measureText('Haya').width;
+  if(mw > w*.92) fs *= w*.92/mw;
+  o.font = `${fs}px "Great Vibes", cursive`;
+  o.textAlign = 'center'; o.textBaseline = 'middle'; o.fillStyle = '#fff';
+  o.fillText('Haya', w/2, h/2);
+  let data; try{ data = o.getImageData(0,0,w,h).data; }catch(e){ spot.classList.add('fallback'); return; }
+  let step = 2, pts;
+  do{
+    step++; pts = [];
+    for(let y = 0; y < h; y += step) for(let x = 0; x < w; x += step)
+      if(data[(y*w + x)*4 + 3] > 120) pts.push([x - w/2, y - h/2]);
+  }while(pts.length > 1900);
+  if(pts.length < 60){ spot.classList.add('fallback'); return; }
+  const old = nameP;
+  nameP = pts.map((p,i) => {
+    const t = (p[0] + w/2)/w, b = Math.min(7, Math.floor(Math.abs(Math.sin(t*Math.PI*1.5))*8));
+    const prev = old[i];
+    return { tx:p[0] + (Math.random()-.5)*step*.6, ty:p[1] + (Math.random()-.5)*step*.6,
+      x: prev ? prev.x : Math.random()*W, y: prev ? prev.y : Math.random()*H,
+      vx:0, vy:0, b, s: step*.42 + Math.random()*.7, delay: Math.random()*1800, ph: Math.random()*6.28 };
+  }).sort((a,b) => a.b - b.b);
+}
+const NAME_COLORS = Array.from({length:8}, (_,i) => lerp3([246,216,168],[255,176,198], i/7));
+
+addEventListener('pointermove', e => {
+  px = e.clientX; py = e.clientY;
+  if(begun && trail.length < 140) trail.push({x:px, y:py, vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2 - .3, life:1});
+}, {passive:true});
+/* iPhone: touchmove keeps firing while she scrolls, pointermove does not */
+function touchPt(e){ const t = e.touches[0]; if(!t) return; px = t.clientX; py = t.clientY;
+  if(begun && trail.length < 140) trail.push({x:px, y:py, vx:(Math.random()-.5)*1.2, vy:(Math.random()-.5)*1.2 - .3, life:1}); }
+addEventListener('touchstart', touchPt, {passive:true});
+addEventListener('touchmove', touchPt, {passive:true});
+addEventListener('touchend', () => setTimeout(() => { px = py = -999; }, 250), {passive:true});
+addEventListener('pointerup', () => setTimeout(() => { px = py = -999; }, 250), {passive:true});
+addEventListener('pointercancel', () => { px = py = -999; }, {passive:true});
+
+let formStart = 0;
+function frame(now){
+  const sy = scrollY, docH = document.documentElement.scrollHeight;
+  const p = clamp(sy/Math.max(1, docH - H), 0, 1);
+
+  if(sunriseStart){ const t = clamp((now - sunriseStart)/8000, 0, 1); sunrise = 1 - Math.pow(1-t, 3); }
+  const dawn = Math.max(smooth(.86, 1, p)*.2, sunrise);
+
+  /* --- scenery --- */
+  const scene = $('scene');
+  scene.style.setProperty('--dawn', dawn.toFixed(3));
+  scene.style.setProperty('--sun', sunrise.toFixed(3));
+  $('skyline').style.transform = `translateY(${smooth(0,.09,p)*110}%)`;
+  $('mountains').style.transform = `translateY(${(1 - (starTouched ? 1 : smooth(.8,.97,p)))*105}%)`;
+  $('flightbar').classList.toggle('on', begun && p > .03);
+  $('fbDone').style.width = (p*100) + '%';
+  $('fbPlane').style.left = (p*100) + '%';
+  const tr = $('tl').getBoundingClientRect();
+  $('tlLine').style.transform = `scaleY(${clamp((H*.72 - tr.top)/tr.height, 0, 1)})`;
+
+  /* --- sky gradient: night, then dawn --- */
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,   lerp3([7,6,26],   [34,26,82],   dawn));
+  g.addColorStop(.5,  lerp3([24,16,62], [112,68,128], dawn));
+  g.addColorStop(.82, lerp3([34,22,84], [236,138,122],dawn));
+  g.addColorStop(1,   lerp3([30,20,74], [255,206,150],dawn));
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  /* --- stars (parallax + twinkle, fading at dawn) --- */
+  ctx.fillStyle = '#fff5e6';
+  const fade = 1 - dawn*.92;
+  for(const s of stars){
+    const y = (((s.y*H - sy*s.z*.18) % H) + H) % H;
+    ctx.globalAlpha = (.25 + .75*Math.abs(Math.sin(now*s.sp + s.ph))) * fade;
+    ctx.beginPath(); ctx.arc(s.x*W, y, s.r, 0, 6.283); ctx.fill();
+  }
+
+  /* --- shooting stars --- */
+  if(Math.random() < .007 && dawn < .5) shooters.push({x:Math.random()*W, y:Math.random()*H*.45, l:0});
+  shooters = shooters.filter(s => s.l < 1);
+  for(const s of shooters){
+    s.l += .022;
+    const x = s.x + s.l*280, y = s.y + s.l*140;
+    const sg = ctx.createLinearGradient(x,y,x-100,y-50);
+    sg.addColorStop(0,`rgba(255,225,238,${(1-s.l)*fade})`); sg.addColorStop(1,'rgba(255,225,238,0)');
+    ctx.globalAlpha = 1; ctx.strokeStyle = sg; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-100,y-50); ctx.stroke();
+  }
+
+  /* --- her name in stars --- */
+  if(nameP.length){
+    const r = $('nameSpot').getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    const dcy = lastCy === null ? 0 : cy - lastCy; lastCy = cy;
+    if(r.bottom > -120 && r.top < H + 120){
+      if(forming){
+        const halo = ctx.createRadialGradient(cx,cy,10,cx,cy,r.width*.55);
+        halo.addColorStop(0,'rgba(255,184,201,.16)'); halo.addColorStop(1,'rgba(255,184,201,0)');
+        ctx.globalAlpha = clamp((now - formStart)/3000,0,1); ctx.fillStyle = halo;
+        ctx.fillRect(cx - r.width, cy - r.height, r.width*2, r.height*2);
+      }
+      let cur = -1;
+      for(const q of nameP){
+        if(forming){
+          q.y += dcy;
+          if(now - formStart > q.delay){
+            q.vx += (cx + q.tx - q.x)*.035; q.vy += (cy + q.ty - q.y)*.035;
+          }
+          const dx = q.x - px, dy = q.y - py, d2 = dx*dx + dy*dy;
+          if(d2 < 8100 && d2 > .01){ const d = Math.sqrt(d2), f = (1 - d/90)*4.5; q.vx += dx/d*f; q.vy += dy/d*f; }
+          q.vx *= .84; q.vy *= .84; q.x += q.vx; q.y += q.vy;
+        }
+        if(q.b !== cur){ cur = q.b; ctx.fillStyle = NAME_COLORS[cur]; }
+        ctx.globalAlpha = forming ? .7 + .3*Math.sin(now*.003 + q.ph) : .25;
+        ctx.beginPath(); ctx.arc(q.x, q.y, q.s*.62, 0, 6.283); ctx.fill();
+      }
+    }
+  }
+
+  /* --- sparkle trail under her finger --- */
+  trail = trail.filter(t => t.life > 0);
+  ctx.fillStyle = '#ffe6b8';
+  for(const t of trail){
+    t.x += t.vx; t.y += t.vy; t.life -= .028;
+    ctx.globalAlpha = Math.max(0, t.life); ctx.beginPath(); ctx.arc(t.x, t.y, 1.6*t.life + .4, 0, 6.283); ctx.fill();
+  }
+
+  /* --- shockwave when the star is touched --- */
+  rings = rings.filter(k => k.life > 0);
+  for(const k of rings){
+    k.r += 9; k.life -= .014;
+    ctx.globalAlpha = Math.max(0, k.life); ctx.strokeStyle = '#ffe9c4'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(k.x, k.y, k.r, 0, 6.283); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(frame);
+}
+
+/* wait for the script font so the star-name is drawn in it, then start */
+const fontReady = (document.fonts && document.fonts.load) ? document.fonts.load('120px "Great Vibes"') : Promise.resolve();
+Promise.race([fontReady, sleep(2500)]).catch(() => {}).then(() => { sizeCanvas(); requestAnimationFrame(frame); });
+
+/* ================= intro typewriter ================= */
+async function type(el, text, speed = 45){ for(const ch of text){ el.textContent += ch; await sleep(speed); } }
+(async () => {
+  const box = $('typed');
+  const lines = [
+    "Some people walk into your life slowly…",
+    "and some just turn around in a bank queue.",
+    "This is for one of those people."
+  ];
+  for(const line of lines){
+    const span = document.createElement('div'); box.appendChild(span);
+    const cur = document.createElement('span'); cur.className = 'cursor'; span.after(cur);
+    await type(span, line, 50); cur.remove(); await sleep(700);
+  }
+  $('beginBtn').classList.add('show');
+})();
+
+/* ================= begin ================= */
+const bgm = $('bgm'), mBtn = $('music');
+function begin(){
+  $('intro').classList.add('gone');
+  begun = true; forming = true; formStart = performance.now();
+  bgm.play().then(() => { mBtn.style.display = 'block'; mBtn.classList.add('on'); }).catch(() => {});
+}
+function toggleMusic(){
+  if(bgm.paused){ bgm.play(); mBtn.classList.add('on'); } else { bgm.pause(); mBtn.classList.remove('on'); }
+}
+
+/* ================= scroll reveal ================= */
+const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('in'); }), {threshold:.15});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+/* ================= boarding pass tilt ================= */
+(function(){
+  const pass = $('pass');
+  function tilt(e){
+    const r = pass.getBoundingClientRect();
+    const x = clamp((e.clientX - r.left)/r.width, 0, 1), y = clamp((e.clientY - r.top)/r.height, 0, 1);
+    pass.style.transform = `rotateY(${(x-.5)*18}deg) rotateX(${(.5-y)*14}deg)`;
+    pass.style.setProperty('--sx', x*100 + '%'); pass.style.setProperty('--sy', y*100 + '%');
+  }
+  pass.addEventListener('pointermove', tilt);
+  const reset = () => { pass.style.transform = ''; };
+  pass.addEventListener('pointerleave', reset); pass.addEventListener('pointerup', reset); pass.addEventListener('pointercancel', reset);
+})();
+
+/* ================= touch the star: sunrise over Kashmir ================= */
+function chime(){
+  try{
+    const A = new (window.AudioContext || window.webkitAudioContext)();
+    [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568].forEach((f,i) => {
+      const o = A.createOscillator(), g = A.createGain(), t = A.currentTime + i*.13;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.1, t + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, t + 1.8);
+      o.connect(g); g.connect(A.destination); o.start(t); o.stop(t + 1.9);
+    });
+  }catch(e){}
+}
+function dropLeaf(){
+  const l = document.createElement('div'); l.className = 'leaf';
+  l.textContent = Math.random() < .75 ? '🍁' : '🍂';
+  l.style.left = Math.random()*96 + 'vw';
+  l.style.fontSize = (14 + Math.random()*14) + 'px';
+  l.style.animationDuration = (7 + Math.random()*6) + 's';
+  document.body.appendChild(l); setTimeout(() => l.remove(), 13500);
+}
+async function touchStar(){
+  if(starTouched) return;
+  starTouched = true;
+  const star = $('star'), r = star.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2;
+  chime(); if(navigator.vibrate) navigator.vibrate([30, 60, 30]);
+  rings.push({x:cx, y:cy, r:10, life:1}); setTimeout(() => rings.push({x:cx, y:cy, r:10, life:.8}), 220);
+  const bits = ['✨','⭐','💫','🌸','💖'];
+  for(let i = 0; i < 44; i++){
+    const s = document.createElement('span'); s.className = 'spark'; s.textContent = bits[i % bits.length];
+    const ang = Math.random()*Math.PI*2, dist = 80 + Math.random()*220;
+    s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    s.style.setProperty('--x', Math.cos(ang)*dist + 'px'); s.style.setProperty('--y', Math.sin(ang)*dist + 'px');
+    document.body.appendChild(s); setTimeout(() => s.remove(), 1700);
+  }
+  star.classList.add('hide');
+  sunriseStart = performance.now();
+  setTimeout(() => setInterval(dropLeaf, 1400), 2500);
+  const letter = $('letter'); letter.style.display = 'block';
+  for(const p of letter.querySelectorAll('p')){
+    p.scrollIntoView({behavior:'smooth', block:'nearest'});
+    await type(p, p.dataset.t, 38); await sleep(350);
+  }
+  await sleep(900);
+  window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'});  // show the sunrise
+}
+</script>
+</body>
+</html>
